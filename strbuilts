@@ -1,0 +1,159 @@
+#!/bin/bash
+
+#DEPENDANCIES:
+#	STRBUILDER
+#	TPUT
+#contains functions utilizing strbuilder to create reusable string functions
+
+
+printdashword () {
+	message="${1:-}"
+	term_w="$(tput cols)"
+	dashline=$(printline $2)
+	halflength="$(( (term_w - ${#message}) / 2 ))"
+	halfdash="${dashline[*]:0:$halflength}"
+	if [ ! $((${#message}%2)) -eq $(($term_w%2)) ]; then 
+		optional="$char"; else optional=''; fi
+	printf "%s\n" "$halfdash$message$halfdash$optional"
+}
+
+#prints terminal width of dash character, or your chosen single character
+printline () { char="${1:--}"; strbuilder "$(tput cols)" "${char:0:1}"; }
+
+printcolorchart () {
+	pad="000"
+	message="C: ${pad:0:$pl}$col"
+	for col in {0..256}; do
+		pl=$((3 - ${#col}))
+		tput setaf 15
+		tput setab $col
+		printf "%s   " "C: ${pad:0:$pl}$col"
+		if [ $((col % 8)) -eq 0 ]; then tput sgr0; printf "\n"; fi
+	done
+}
+
+printalpharoad () {
+	clear
+	alarm=.5 #as a second
+	growth=.90
+		for lap in {1..10}; do
+		for letter in {a..z}; do
+			printf "%s" \
+"$(strbuilder -s nl -r "$(tput cols)" "$(strbuilts line "$letter")")"
+			sleep "$alarm"
+			alarm=$(bc <<< "$alarm * $growth")
+		done
+		if [ $((lap / 2 )) -eq 0 ]; then
+			growth=.9
+		else
+			growth=1.25
+			sleep 1
+		fi
+	done
+}
+
+#arguments: y, x, height, width, string/file
+printwordbox () {
+	echo "hey bud don't go down this path just uses curses at that point"
+	exit 0;
+	y_coord="${1:-0}"; x_coord="${2:-0}"
+	height="${3:-5}";  width="${4:-5}"
+	shift 4
+	if [ -f "$5" ]; then
+		message=$(cat "$5")
+	else
+		message="$*"
+	fi
+	#must make box wider or taller if the text input requires it. or reject?
+		#do this^^^
+	#X example text 
+	
+	Lsymbol="X "
+	Rsymbol="X "
+	Tsymbol='(-)'
+	BSymbol='=o='
+	lpad="$(strbuilder ' ' -n $((x_coord)))"
+	
+	top="$(strbuilder $Tsymbol -n $width)" #same as bottom
+	bottom="$(strbuilder $Bsymbol -n $width)" #same as bottom
+	middle="$(middle_format)"
+	result="$top"
+	
+	for i in $(seq 2 $height); do # start at 2 because we skip top and bottom
+		result+="\n$lpad$middle"
+	done
+	result+="\n$lpad$top"
+	clear
+	tput cup $y_coord $x_coord
+	printf "%b" "$result"
+}
+
+
+#arguments: y, x, height, width
+printbox () {
+	y_coord="${1:-0}"; x_coord="${2:-0}"
+	height="${3:-5}";  width="${4:-5}"
+	symbol="X"
+	
+	lpad="$(strbuilder ' ' -n $((x_coord)))"
+	
+	
+	top="$(strbuilder $symbol -n $width)" #same as bottom
+	middle="$symbol"$(strbuilder ' ' -n $((width-2)))"$symbol"
+	result="$top"
+	
+	for i in $(seq 2 $height); do # start at 2 because we skip top and bottom
+		result+="\n$lpad$middle"
+	done
+	result+="\n$lpad$top"
+	clear
+	tput cup $y_coord $x_coord
+	printf "%b" "$result"
+}
+
+printbox_out_in () {
+	y=0; x=0
+	pause="${1:-1}"
+	while [ "$((y*2))" -lt "$rows" -a "$((x*2))" -lt "$cols" ]; do
+		#clear moved to printcircle function
+		printcircle "$y" "$x" "$((rows - y - y))" "$((cols - x - x))"
+		x=$((x+1)); y=$((y+1))
+		sleep "$pause"	
+		echo "circle" >> $PWD/testout
+	done
+}
+printbox_in_out () {
+	y="$((rows / 2))"; x="$((cols / 2))"; pause="${1:-1}"
+	while [ "$((y))" -gt 0 -a "$((x))" -gt 0 ]; do
+		#clear moved to printcircle function
+		printcircle "$y" "$x" "$((rows - y - y))" "$((cols - x - x))"
+		x=$((x-1)); y=$((y-1))
+		sleep "$pause"
+	
+	done
+}
+
+
+
+debugflag=true
+rows=$(tput lines)
+cols=$(tput cols)
+help="	--line|-l <c>		print terminal width line of overridable <dash>
+	--center|-c <arg> <c>	print <arg> in center of twidth  <dash> line
+	--chart|--colorchart	print table of all tput colors. just helpful.
+	--box <y> <x> <h> <w>print box.
+	--outin <sleep>		print box from outside of terminal to center.
+	--inout<sleep>		print box from center to outside of terminal.
+"
+
+case $1 in
+	--line|-l) printline "$2";;
+	--center|-c) printdashword "$2" "$3";;
+	--chart|--colorchart) printcolorchart;;
+	--box) printbox "$2" "$3" "$4" "$5";;
+	--outin) printbox_out_in "$2";;
+	--inout) printbox_in_out "$2";;
+	*|--help|-h) strbuilts --center ' OPTIONS '; printf "%s\n" "$help";;
+esac
+exit 0
+

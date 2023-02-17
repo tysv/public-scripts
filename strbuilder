@@ -1,0 +1,171 @@
+#!/bin/bash
+
+declare -A colormatch=( [red]=196 [orange]=202 [green]=2 [purple]=92 [white]=15 \
+[black]=233	 [blue]=19 [teal]=49 [grey]=244 [gray]=244 [yellow]=226 [gold]=136 \
+[pink]=9 )
+
+if [ $(command -v "tput") ]; then
+	tcols="$(tput cols)"
+	trows="$(tput lines)"
+else
+	echo "strbuilder requires tput to be installed; sorry kid."
+	exit 0
+fi
+
+printexamples () {
+	strbuilder -t nl "Example calls. Output encapsulated inside '>' and '<'"
+	printf "strbuilder -cf green 10 -cb white Hello >%s<\n" "$(strbuilder -cf green 10 -cb white Hello)"
+	printf "strbuilder -cf orange -r world 3 -t nl -s tab >%s<\n" "$(strbuilder -cf orange -r world 3 -t nl -s tab)"
+exit 0
+} 
+
+printcolornames () { printf "known color names:\n%s\n" "${!colormatch[*]}"; }
+
+printhelptext() {
+printf "%s\n" "\
+------------------   strbuilder <flags> <num> <elements>   ---------------------
+USAGE: 	To create strings by repeating inputs to fill full length specified.
+default example: strbuilder 12 str --> 'strstrstrstr'
+  strbuilder --colorfore/-cf <arg>	will print font in color given <0-256>
+  strbuilder --colorback/-cb <arg>	will print background of font in color
+  	color args can be an int 0-256, or one of limited builtin english words
+  strbuilder --color-list/-cl		will print the known color keywords
+  strbuilder --number/-n <num>		prints str of NUM length
+  strbuilder --repeat/-r <num>		prints str of NUM repetitions
+  strbuilder --seperator/-s <sep_char>	seperate str elements
+  strbuilder --terminate/-t <end_char>	close string with this character
+     SPECIAL for -s/-t: nl = $'\n'	tab = $'\t'
+  strbuilder --examples			prints some example commands and results
+  UNFLAGGED ARGS added to <str_elements> UNLESS num is currently 0"
+}
+	
+setforecolor () {
+	color="${colormatch[$1]:-$1}"
+	if [ -n "${color//[0-9]/}" ]; then 
+		echo "error: setforecolor(): $color"; exit 0
+	else f_color="$(tput setaf "$color")"
+	fi
+}
+setbackcolor () {
+	color="${colormatch[$1]:-$1}"
+	if [ -n "${color//[0-9]/}" ]; then 
+		echo "error: setbackcolor(): $color"; exit 0
+	else g_color="$(tput setab "$color")"
+	fi
+}
+
+# this is not without side-effects!!
+# will add some escape codes even if the change is invisible.
+# only call when colors are !!already!! being introduced, or will break scripts
+resetcolors () { f_color=''; g_color=''; colorflag=false; tput sgr0; }
+
+resetpress () {
+	num=0; stamp=''; seperator=''; terminator=''
+	repeatflag=false; numberflag=true
+	if [ "$colorflag" = "true" ]; then resetcolors; fi
+}
+
+printingpress () {
+	message=''
+	if [ "$repeatflag" = "true" ]; then
+		length=$(($num-1))
+	elif [ "$numberflag" = "true" ]; then
+		length="$(( $num / ${#stamp} ))"
+	fi
+	count=0
+	for index in $(seq 0 "$length"); do
+		message+="$stamp$seperator"
+		count=$((count+1))
+	done
+	if [ "$colorflag" = true ]; then printf "${f_color}${g_color}"; fi
+	if [ "$numberflag" = true ]; then
+		remainder="$(($num % ($count * ${#stamp})))"
+		message+="${stamp:$remainder}$separator"
+		printf "%b" "${message:0:$remainder}"
+		if [ "$terminator" = $'\n' ] ; then resetcolors; fi
+		printf "%b" "$terminator"
+	elif [ "$repeatflag" = "true" ]; then
+		printf "%b" "$message"
+		if [ "$terminator" = $'\n' ] ; then resetcolors; fi
+		printf "%b" "$terminator"
+	fi
+}
+
+if [ "$#" -le 0 ]; then printhelptext; fi
+
+resetpress
+while [ "$#" -gt 0 ]; do
+arg="$1"
+	#Catch special keyworded arguments and translate them here
+case "$arg" in
+	TERMINAL_WIDTH|WIDTH|T_W)
+		arg="$tcols"
+	;;
+	TERMINAL_HEIGHT|HEIGHT|T_H)
+		arg="$trows"
+	;;
+esac
+
+	#process command line arguments here#
+	#!	 !!   $1 is $arg instead   !!  !#
+case "$arg" in
+	-cf|--colorfore)
+		setforecolor "$2"; shift
+		colorflag="true"
+	;;
+	-cb|--colorback)
+		setbackcolor "$2"; shift
+		colorflag="true"
+	;;
+	-r|--repeat)
+		repeatflag="true"; numberflag="false"
+	;;
+	-n|--number)
+		numberflag="true"; repeatflag="false"
+	;;
+	-s|--seperator)
+		if [ "$2" = "nl" ]; then seperator+=$'\n'
+		elif [ "$2" = "tab" ]; then	seperator+=$'\t'
+		else seperator+="$2"; fi
+		shift
+	;;
+	-t|--terminator)
+		if [ "$2" = "nl" ]; then terminator+=$'\n'
+		elif [ "$2" = "tab" ]; then	terminator+=$'\t'
+		else terminator+="$2"; fi
+		shift
+	;;
+	--help|-h)
+		printhelptext
+		exit 0
+	;;
+	--color-list|-cl)
+		printcolornames
+		exit 0
+	;;
+	--)
+		printingpress; resetpress
+	;;
+	--example*)
+		printexamples
+		exit 0
+	;;
+	*)
+		if [ "$num" -eq 0 -a "${arg//[0-9]/}" = '' ]; then
+			num="$arg"
+		else stamp+="$arg"; 
+		fi
+	;;
+esac
+shift    
+done
+
+#don't make none of something
+if [ -z "$stamp" ]; then printf ''; exit 0
+#default to just printing one copy of the stamp when unspecified
+elif [ "$num" -eq 0 ]; then num=1; repeatflag="true"; numberflag="false"; fi
+
+printingpress
+resetpress
+exit 0
+

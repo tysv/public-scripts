@@ -1,0 +1,223 @@
+#!/bin/bash
+
+rootdir="${XDG_CONFIG_HOME:-/home/$USER/.config}/brentry/"
+sitesdir="${rootdir}sites/"
+archivedir="${rootdir}archive/"
+configfile="${rootdir}brentry.config"
+logfile="${rootdir}brentry.log"
+
+dryflag=false
+debugflag=false
+#check for dependencies
+# rentry, find, 
+
+#first time setup
+if [ ! -d "$rootdir" ]; then
+	mkdir -m 750 --parents "$rootdir" "$sitesdir" "$archivedir"
+fi
+debug () { if [ "$debugflag" = "true" ]; then echo "$*"; fi; }
+error () { printf "error: %s\n" "$1"; exit "${2:-1}"; }
+passwordgen ()  {
+	result=''
+	length="${1:-75}"
+	while [ "${#result}" -lt "$length" ]; do
+		result+=$((RANDOM % 10))
+	done
+	printf "%s" "$result"
+}
+verifier () {
+	printf "%s\n" '|||||\\\\===+--   DOUBLE CHECK   --+===////|||||'
+	printf "%s\n" "$1"
+	response="$(prompter "Proceed? (Y)es or (N)o" 'YN')"
+	if [ "$response" = "Y" ]; then return 0; else return 1; fi
+}
+prompter () {
+	response=''; input='false'; prompt="$1"; shift; filter="$*"
+	#will fail if the filter removes anything, and ask again
+	while [ ! "$response" = "$input" ]; do 
+		read -r -p "$prompt: " input ; response="${input//[!$filter]}"
+	done
+	printf "%s" "$response"
+}
+prompt_url () {
+	allowed="A-Za-z0-9\_\-"; printf "%s" "$(prompter 'url' "$allowed")"; }
+prompt_markdown () {
+	allowed=""; printf "%s" "$(prompter 'markdown' "$allowed")"; }
+prompt_password () {
+	allowed=""; printf "%s" "$(prompter 'password' "$allowed")"; }
+rentry_command () {
+	if [ "$dryflag" = true ]; then print_variables; exit 0;	fi
+	success=1
+	case "$rentry_mode" in
+	(new)
+		rentry new --url "$site_url" --edit-code "$site_password" "$site_markdown"
+		success="$?"
+	;;
+	(edit)
+		rentry edit --url "$site_url" --edit-code "$site_password" "$site_markdown"
+		success="$?"
+	;;
+	(raw)
+		raw_download="$(rentry raw -u "$site_url")"
+		printf "%s" "$raw_download"
+		exit 0
+	;;
+	(import)
+		echo "unimplemented currently. need to try to make an edit"
+		echo "and if successful record it. EXITING NOW"
+		exit 0
+	esac
+	if [ "$success" -eq 0 ]; then record_site; fi
+}
+import_site () {
+	if [ -z "$site_url" ]; then site_url="$(prompt_url)"; fi
+	if [ -z "$site_password" ]; then site_password="$(prompt_password)"; fi
+	rentry_command
+}
+edit_site () {
+	if [ -z "$site_markdown" ]; then #UPDATE MODE
+		#given no new markdown string, push the current .md file again
+		file_markdown="$(find "$rootdir" -name "${site_url//[.]*/}.md")"
+	else # REPLACE MODE
+		#given new markdown, check to see if we are copying another site
+		file_markdown="$(find "$rootdir" -name "${site_markdown//[.]*/}.md")"
+	fi
+	#if given markdown, load it up then push to the site REPLACE MODE
+	if [ -n "$file_markdown" ]; then site_markdown="$(cat "$file_markdown")"; fi
+	#if no markdown, don't just erase the site!      better to exit.
+	if [ -z "$site_markdown" ]; then error "need markdown to edit"; fi
+
+	if [ -z "$site_password" ]; then
+		file_password="$(find "$rootdir" -name "${site_url//[.]*/}.secret")"
+	fi
+	if [ -n "$file_password" ]; then site_password="$(cat "$file_password")"; fi
+	if [ -z "$site_markdown" ]; then site_password="$(prompt_password)"; fi
+	rentry_command
+}
+new_site () {
+	file_markdown="$(find "$rootdir" -name "${site_markdown//[.]*/}.md")" 
+	if [ -n "$file_markdown" ]; then site_markdown="$(cat "$file_markdown")"; fi
+	if [ -z "$site_password" ]; then site_password=$(passwordgen); fi
+	rentry_command
+}
+get_site () {
+	rentry raw -u "$site_url"
+}
+shuffle_site () {
+	echo "todo"
+}
+examine_site() { print_variables; }
+list_site () { find "$sitesdir" -type f -name "*.md" -exec basename {} \; ; }
+print_variables () {
+	echo "url: $site_url"
+	echo "password: $site_password"
+	echo "markdown: $site_markdown"
+	echo "mode: $rentry_mode"
+}
+#don't delete, let them do that. edit codes are unrecoverable, so...
+archive_site () {
+	print_variables
+	find "$sitesdir" -type f -name "${site_url}"\* -exec mv {} "$archivedir" \;
+}
+record_site () {
+	secret="${sitesdir}$site_url.secret"
+	touch "$secret" 
+	md="${sitesdir}$site_url.md"
+	touch "$md"
+	echo "$site_password" > "$secret"
+	chmod 700 "$secret"
+	echo "$site_markdown" > "${sitesdir}$site_url.md"
+	chmod 700 "$md"
+}
+#I think we're going to put all this in a big text thing?
+printhelp () { echo "p_help"; }
+printhelp_markdown () { echo "p_markdown"; }
+printhelp_new () { echo "p_new"; }
+printhelp_edit () { echo "p_edit"; }
+printhelp_get () { echo "p_get"; }
+printhelp_shuffle () {  echo "p_shuffle"; }
+site_url=""
+site_password=""
+site_markdown=""
+rentry_mode="examine"
+while [ -n "$1" ]; do
+	if [ "$1" = "--" ]; then break; fi
+	case "$1" in
+		(--dry|--dry-run) dryflag=true; ;;
+		(--help|-h)
+			printhelp; exit 0; ;;
+		(--new|-n)
+			if [ -z "$2" ]; then printhelp_new; exit 0; fi
+			rentry_mode="new"
+		;;
+		(--edit|-e)
+			if [ -z "$2" ]; then printhelp_get; exit 0; fi
+			if [ -z "$2" ]; then printhelp_edit; exit 0; fi
+			rentry_mode="edit"
+		;;
+		(--get|-g)
+			rentry_mode="raw"
+		;;
+		(--shuffle|-s)
+			if [ -z "$2" ]; then printhelp_shuffle; exit 0; fi
+			rentry_mode="shuffle"
+		;;
+		(--import|-i)
+			rentry_mode="import"
+		;;
+		(--delete|--archive|-a)
+			rentry_mode="archive"
+		;;
+		(--list|-l)
+			list_site; exit 0; ;;
+		(--url|-u) 
+			site_url="$2"; shift; ;;
+		(--password|-p) 
+			site_password="$2"; shift; ;;
+		(--markdown|-m) 
+			site_markdown="$2"; shift; ;;
+		(*)
+			positionals+=("$1")		
+		;;
+	esac
+	shift
+done
+
+set -- "${positionals[@]}"
+if [ -z "$site_url" ]; then site_url="$1"; shift; fi
+
+#check for existing urls here to affect what the modes need to do here
+#if existing site, get password loaded up
+if [ -z "$site_url" ]; then list_site; exit 0; fi
+
+filepath="$(find "$sitesdir" -name "$site_url.secret")"
+if [ -f "$filepath" ]; then	
+	if [ -z "$site_password" -o "$rentry_mode" = "edit" ]; then 
+		site_password="$(cat "$filepath")"
+	fi
+fi
+
+if [ -z "$site_markdown" ]; then site_markdown="$*"; fi
+
+filepath="$(find "$sitesdir" -name "$site_url.md")"
+if [ -f "$filepath" ]; then
+	if [ -z "$site_markdown" ]; then site_markdown="$(cat "$filepath")"; fi
+fi
+if [ -z "$site_markdown" ]; then site_markdown="$*"; fi
+
+#prep then launch action
+case "$rentry_mode" in
+	(changepassword) echo "todo: changepassword function"; ;;
+	(import) import_site; ;;
+	(new) new_site; ;;
+	(edit) edit_site; ;;
+	(raw) rentry_command; ;;
+	(examine) examine_site; ;;
+	(archive) archive_site; ;;
+esac
+
+exit 0
+
+
+
+

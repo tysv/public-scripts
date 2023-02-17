@@ -1,0 +1,41 @@
+#!/bin/bash
+
+dirfile="$HOME/bin/.scredit"
+if [ ! -f "$dirfile" ]; then
+	touch "$dirfile"
+	echo "$HOME" >> "$dirfile"
+fi
+
+
+#options for maintaining the preferred directories list
+if [ "$1" = '--add' ] || [ "$1" = "-a" ]; then
+	if [ -d "$2" ]; then echo "$2" >> "$dirfile"
+	elif [ -z "$2"]; then echo "$PWD" >> "$dirfile"
+	fi
+	exit 0
+elif [ "$1" = "--edit" ] || [ "$1" = "-e" ]; then
+	nano "$dirfile"; exit 0;
+elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+	strbuilts --center " Script Fuzzy Finder "
+	echo "usage: scrfzf file"
+	echo "will use fuzzy search to look for a file, then open it in a txt editor"
+	exit 0
+fi
+
+
+read -d '$EOF' -a directories < "$dirfile"
+
+#choice=$(find "${directories[@]}" -maxdepth 1 -type f | fzf -1 -e -q "$1")
+choice=$(find "${directories[@]}" -type f | fzf -1 -e -q "$1")
+
+if [ -z "$choice" ]; then echo "fail to find, I guess"; fi
+
+case "$choice" in
+	(*.pdf)
+		nohup atril "$choice" &
+		exit 0
+	;;
+	(*)
+		nano "$choice"; exit 0
+	;;
+esac
