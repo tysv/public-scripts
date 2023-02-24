@@ -8,8 +8,9 @@ logfile="${rootdir}brentry.log"
 
 dryflag=false
 debugflag=false
+forceflag=false #do we check before doing things?
 #check for dependencies
-# rentry, find, 
+# rentry, find,
 
 #first time setup
 if [ ! -d "$rootdir" ]; then
@@ -33,9 +34,11 @@ verifier () {
 }
 prompter () {
 	response=''; input='false'; prompt="$1"; shift; filter="$*"
+	if [ "$prompt" = "password" ]; then hide_reply=" -s"; fi
 	#will fail if the filter removes anything, and ask again
-	while [ ! "$response" = "$input" ]; do 
-		read -r -p "$prompt: " input ; response="${input//[!$filter]}"
+	while [ ! "$response" = "$input" ]; do
+		read -r -p "$prompt: " $hide_reply input
+		response="${input//[!$filter]}"
 	done
 	printf "%s" "$response"
 }
@@ -59,13 +62,12 @@ rentry_command () {
 	;;
 	(raw)
 		raw_download="$(rentry raw -u "$site_url")"
-		printf "%s" "$raw_download"
-		exit 0
+		if [ "$?" = 0 ]; then printf "%s" "$raw_download" && exit 0
+		else error "'rentry raw' failed with code $?" "$?"; fi
 	;;
 	(import)
-		echo "unimplemented currently. need to try to make an edit"
-		echo "and if successful record it. EXITING NOW"
-		exit 0
+		site_markdown="$(rentry raw -u "$site_url")"
+		success="$?"
 	esac
 	if [ "$success" -eq 0 ]; then record_site; fi
 }
@@ -80,11 +82,13 @@ edit_site () {
 		file_markdown="$(find "$rootdir" -name "${site_url//[.]*/}.md")"
 	else # REPLACE MODE
 		#given new markdown, check to see if we are copying another site
-		file_markdown="$(find "$rootdir" -name "${site_markdown//[.]*/}.md")"
+		if [ -f "$site_markdown" ]; then file_markdown="$site_markdown";
+		else file_markdown="$(find "$rootdir" -name "${site_markdown//[.]*/}.md")"
+		fi
 	fi
 	#if given markdown, load it up then push to the site REPLACE MODE
 	if [ -n "$file_markdown" ]; then site_markdown="$(cat "$file_markdown")"; fi
-	#if no markdown, don't just erase the site!      better to exit.
+	#if no markdown, don't just erase the site! better to exit.
 	if [ -z "$site_markdown" ]; then error "need markdown to edit"; fi
 
 	if [ -z "$site_password" ]; then
@@ -95,7 +99,7 @@ edit_site () {
 	rentry_command
 }
 new_site () {
-	file_markdown="$(find "$rootdir" -name "${site_markdown//[.]*/}.md")" 
+	file_markdown="$(find "$rootdir" -name "${site_markdown//[.]*/}.md")"
 	if [ -n "$file_markdown" ]; then site_markdown="$(cat "$file_markdown")"; fi
 	if [ -z "$site_password" ]; then site_password=$(passwordgen); fi
 	rentry_command
@@ -107,7 +111,13 @@ shuffle_site () {
 	echo "todo"
 }
 examine_site() { print_variables; }
-list_site () { find "$sitesdir" -type f -name "*.md" -exec basename {} \; ; }
+#by default do not go into brentry_root/sites/any_subdirectories
+list_site () {
+	find "$sitesdir" -maxdepth 1 -type f -name "*.md" -exec basename {} \;
+}
+list_site_all () {
+	find "$sitesdir" -type f -name "*.md" -exec basename {} \;
+}
 print_variables () {
 	echo "url: $site_url"
 	echo "password: $site_password"
@@ -127,8 +137,9 @@ record_site () {
 	echo "$site_password" > "$secret"
 	chmod 700 "$secret"
 	echo "$site_markdown" > "${sitesdir}$site_url.md"
-	chmod 700 "$md"
+	chmod 740 "$md"
 }
+#########################################################
 #I think we're going to put all this in a big text thing?
 printhelp () { echo "p_help"; }
 printhelp_markdown () { echo "p_markdown"; }
@@ -136,6 +147,7 @@ printhelp_new () { echo "p_new"; }
 printhelp_edit () { echo "p_edit"; }
 printhelp_get () { echo "p_get"; }
 printhelp_shuffle () {  echo "p_shuffle"; }
+#########################################################
 site_url=""
 site_password=""
 site_markdown=""
@@ -170,25 +182,31 @@ while [ -n "$1" ]; do
 		;;
 		(--list|-l)
 			list_site; exit 0; ;;
-		(--url|-u) 
+		(--url|-u)
 			site_url="$2"; shift; ;;
-		(--password|-p) 
+		(--password|-p)
 			site_password="$2"; shift; ;;
-		(--markdown|-m) 
+		(--markdown|-m)
 			site_markdown="$2"; shift; ;;
 		(*)
-			positionals+=("$1")		
+			positionals+=("$1")
 		;;
 	esac
 	shift
 done
 
+#restore the skipped args
 set -- "${positionals[@]}"
+#by default, positional parameter $1 = url
 if [ -z "$site_url" ]; then site_url="$1"; shift; fi
 
+#if no arguments given at all, just list sites brentry is tracking
+if [ -z "$site_url" -a "$rentry_mode" = "examine" ]; then
+	list_site; exit 0
+elif [ "$site_url" = "all" -a "$rentry_mode" = "examine" ]; then
+	list_site_all; exit 0; fi
 #check for existing urls here to affect what the modes need to do here
 #if existing site, get password loaded up
-if [ -z "$site_url" ]; then list_site; exit 0; fi
 
 filepath="$(find "$sitesdir" -name "$site_url.secret")"
 if [ -f "$filepath" ]; then	
@@ -197,12 +215,12 @@ if [ -f "$filepath" ]; then
 	fi
 fi
 
-if [ -z "$site_markdown" ]; then site_markdown="$*"; fi
+#if [ -z "$site_markdown" ]; then input_markdown="$*"; fi
 
-filepath="$(find "$sitesdir" -name "$site_url.md")"
-if [ -f "$filepath" ]; then
-	if [ -z "$site_markdown" ]; then site_markdown="$(cat "$filepath")"; fi
-fi
+#filepath="$(find "$sitesdir" -name "$site_url.md")"
+#if [ -f "$filepath" ]; then
+#	if [ -z "$site_markdown" ]; then site_markdown="$(cat "$filepath")"; fi
+#fi
 if [ -z "$site_markdown" ]; then site_markdown="$*"; fi
 
 #prep then launch action

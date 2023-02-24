@@ -1,7 +1,5 @@
 #!/bin/bash
 
-verbose=true
-
 first_time_setup() {
 	mkdir --parents "$book_dir"
 	touch "$chapter" "$config_file"
@@ -60,7 +58,15 @@ default_chapter="${book_dir}general"
 chapter="$default_chapter"
 config_file="${book_dir}.noty_config"
 EDITOR="nano"
+verbose=true
 
+print_variables () {
+	printf "book_dir: %s\n" "$book_dir"
+	printf "default_chapter: %s\n" "$default_chapter"
+	printf "chapter: %s\n" "$chapter"
+	printf "config_file %s\n" "$config_file"
+	printf "EDITOR: %s\n" "$EDITOR" 
+}
 if [ ! -f "$config_file" ]; then first_time_setup; fi
 
 while [ -n "$1" ]; do
@@ -110,6 +116,9 @@ while [ -n "$1" ]; do
 			fi
 			echo "No chapters were deleted"
 			exit 0
+		;;
+		--variables)
+			print_variables; exit 0
 		;;
 	esac
 	#detecting a non default chapter specification

@@ -115,18 +115,17 @@ printbox_out_in () {
 	y=0; x=0
 	pause="${1:-1}"
 	while [ "$((y*2))" -lt "$rows" -a "$((x*2))" -lt "$cols" ]; do
-		#clear moved to printcircle function
-		printcircle "$y" "$x" "$((rows - y - y))" "$((cols - x - x))"
+		#clear moved to printbox function
+		printbox "$y" "$x" "$((rows - y - y))" "$((cols - x - x))"
 		x=$((x+1)); y=$((y+1))
 		sleep "$pause"	
-		echo "circle" >> $PWD/testout
 	done
 }
 printbox_in_out () {
 	y="$((rows / 2))"; x="$((cols / 2))"; pause="${1:-1}"
 	while [ "$((y))" -gt 0 -a "$((x))" -gt 0 ]; do
-		#clear moved to printcircle function
-		printcircle "$y" "$x" "$((rows - y - y))" "$((cols - x - x))"
+		#clear moved to printbox function
+		printbox "$y" "$x" "$((rows - y - y))" "$((cols - x - x))"
 		x=$((x-1)); y=$((y-1))
 		sleep "$pause"
 	

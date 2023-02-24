@@ -155,6 +155,10 @@ while [ "$#" -gt 1 ]; do
 		editorflag="mousepad"; shift; fi
 	if [ "$1" = "-a" ] || [ "$1" = "--atril" ]; then
 		editorflag="atril"; shift; fi
+	if [ "$1" = "-s" ] || [ "$1" = "--shellcheck" ]; then
+		editorflag="shellcheck"; shift; fi
+	if [ "1" = "-l" ] || [ "$1" = "--less" ]; then
+		editorflag="less"; shift; fi
 	if [ "$1" = "-e" ] || [ "$1" = "--extend" ]; then
 		if [ "$2" = "here" ]; then ndir="$PWD";fi
 		if [ -d "${ndir:-$2}" ]; then
@@ -206,5 +210,10 @@ elif [ "$editorflag" = "mousepad" ]; then
 	mousepad "$file" & disown || echo "scredit: error: failed to open ($file) with mousepad"
 elif [ "$editorflag" = "atril" ]; then
 	atril "$file" & disown || echo "scredit: error: failed to open ($file) with atril"
+elif [ "$editorflag" = "shellcheck" ]; then
+	shellcheck "$file" || echo "scredit: error: failed to shellcheck ($file)"
+elif [ "$editorflag" = "less" ]; then
+	less "$file" || echo "scredit: error: failed to less ($file)"
 fi
 ################################################################################
+exit 0
