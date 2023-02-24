@@ -1,5 +1,5 @@
 #!/bin/bash
-
+maxdepth="7"
 dirfile="$HOME/bin/.scredit"
 if [ ! -f "$dirfile" ]; then
 	touch "$dirfile"
@@ -18,7 +18,7 @@ elif [ "$1" = "--edit" ] || [ "$1" = "-e" ]; then
 elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
 	strbuilts --center " Script Fuzzy Finder "
 	echo "usage: scrfzf file"
-	echo "will use fuzzy search to look for a file, then open it in a txt editor"
+	echo "will use fuzzy search to look for '*file*', then open it in an editor"
 	exit 0
 fi
 
@@ -26,9 +26,9 @@ fi
 read -d '$EOF' -a directories < "$dirfile"
 
 #choice=$(find "${directories[@]}" -maxdepth 1 -type f | fzf -1 -e -q "$1")
-choice=$(find "${directories[@]}" -type f | fzf -1 -e -q "$1")
+choice=$(find "${directories[@]}" -maxdepth "$maxdepth" -type f | fzf -1 -e -q "$1")
 
-if [ -z "$choice" ]; then echo "fail to find, I guess"; fi
+if [ -z "$choice" ]; then echo "fail to find, I guess"; exit; fi
 
 case "$choice" in
 	(*.pdf)
