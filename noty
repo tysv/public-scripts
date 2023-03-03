@@ -8,7 +8,7 @@ first_time_setup() {
 read_toc () {
 	strbuilts --center "  Table of Contents  "
 	cd "$book_dir"
-	printf "%s\n" *
+	printf "%s\n" * | column
 	strbuilts --center "'noty <chapter>' to see contents"
 }
 
@@ -24,7 +24,7 @@ READ USAGE: noty >OR< noty <chapter>
 '
 }
 
-read_book () {
+read_chapter () {
 	strbuilts --center "  $(basename $chapter) knowledge  "
 	printf "%s\n" "$(cat ${chapter})"
 }
@@ -32,7 +32,7 @@ read_book () {
 read_all () {
 	for chap in "$book_dir"*; do
 		chapter="$chap"
-		read_book
+		read_chapter
 	done
 }
 
@@ -47,11 +47,12 @@ new_chapter () {
 #shelf= root directory		book= chapter directory		chapter= notes in files
 ################################################################################
 
-
-
-
 #todo interpret more complex commands
-#noty non-default-book:non-default-chapter "some addition to non-default.chapter"
+#todo support shelves
+#todo change chapter titles
+#todo config general behavior in lots of ways would be neat
+# ----like display one book? toc? toc + some chapters? {ch1, ch2, ... , chn}
+
 
 book_dir="$HOME/.config/$USER/noty/"
 default_chapter="${book_dir}general"
@@ -130,7 +131,7 @@ while [ -n "$1" ]; do
 done
 
 if [ "$#" -eq 0 ]; then
-	read_book
+	read_chapter
 fi
 #-------------------------------------------------------------------------------
 exit 0
