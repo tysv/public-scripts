@@ -127,11 +127,18 @@ while [ -n "$1" ]; do
 		chapter="${book_dir}${1}"
 		shift; continue
 	fi
-	new_chapter "$*"
+	positionals+=("$1")
+	shift
 done
 
-if [ "$#" -eq 0 ]; then
+set -- "${positionals[@]}"
+
+if	 [ "$#" -eq 0 ]; then
 	read_chapter
+elif [ "$#" -eq 1 ]; then
+	read_toc
+else
+	new_chapter "$*"
 fi
 #-------------------------------------------------------------------------------
 exit 0
