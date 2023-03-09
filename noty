@@ -24,18 +24,16 @@ READ USAGE: noty >OR< noty <chapter>
 '
 }
 
-read_chapter () {
-	strbuilts --center "  $(basename $chapter) knowledge  "
-	printf "%s\n" "$(cat ${chapter})"
-}
-
 read_all () {
 	for chap in "$book_dir"*; do
 		chapter="$chap"
 		read_chapter
 	done
 }
-
+read_chapter () {
+	strbuilts --center "  $(basename $chapter) knowledge  "
+	printf "%s\n" "$(cat ${chapter})"
+}
 new_chapter () {
 	if [ -z "$1" ]; then exit 0; fi
 	printf "$*\n" >> "${chapter}"
@@ -135,7 +133,7 @@ set -- "${positionals[@]}"
 
 if	 [ "$#" -eq 0 ]; then
 	read_chapter
-elif [ "$#" -eq 1 ]; then
+elif [ "$#" -eq 1 -a "$chapter" = "$default_chapter" ]; then
 	read_toc
 else
 	new_chapter "$*"
