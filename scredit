@@ -23,7 +23,7 @@ if [ ${#directories[@]} -eq 0 ]; then
 	echo ""
 fi
 #include current directory in search list AFTER all the listed directories; then the directory we're pointing to, if any
-directories+=("$PWD")
+$(grep -q "$PWD" <<< "$(cat "$dir_list_path")") || directories+=("$PWD")
 #while read -e dir; do directories+=("$dir"); done < "$dir_list_path"
 
 ################################################################################
