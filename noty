@@ -93,7 +93,7 @@ while [ -n "$1" ]; do
 		--edit|-e|edit)
 			shift
 			cd "$book_dir"
-			$EDITOR "$(fzf -1 --query ${1:-' '})"
+			$EDITOR "$(fzf -1 --query ${1:-"$(basename $chapter)"})"
 			exit 0
 		;;
 		--delete|-d)
@@ -130,10 +130,12 @@ while [ -n "$1" ]; do
 done
 
 set -- "${positionals[@]}"
+read -a word_counting_array <<< "$*"
+words="${#word_counting_array[@]}"
 
 if	 [ "$#" -eq 0 ]; then
 	read_chapter
-elif [ "$#" -eq 1 -a "$chapter" = "$default_chapter" ]; then
+elif [ "$#" -eq 1 -a "$chapter" = "$default_chapter" -a "$words" -le 1 ]; then
 	read_toc
 else
 	new_chapter "$*"
