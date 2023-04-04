@@ -31,7 +31,6 @@ $(grep -q "$PWD" <<< "$(cat "$dir_list_path")") || directories+=("$PWD")
 #----------------------------# FUNCTIONS  #------------------------------------#
 ################################################################################
 ################################################################################
-#took a line here to save hella space later.
 debug () { if [ "$debugflag" = true ]; then printf "$1\n"; else return 1; fi; }
 printHelpText () {
 	echo ">>>SC(ript)EDIT opens files from preferred directories with $EDITOR<<<"
@@ -68,6 +67,7 @@ fuzzySearch () {
 }
 
 straightSearch () {
+	if [ -f "$1" ]; then success=true; file="$1"; fi
 	for d in ${directories[@]}; do
 		if [ $success = true ]; then break; fi
 		file=""$d"/"$1""
