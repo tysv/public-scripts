@@ -107,7 +107,7 @@ while [ -n "$1" ]; do
 				exit 0
 			fi
 			printf "noty will delete the following blank chapters:\n"
-			printf "%s\n" "$(basename ${list[@]})"
+			printf "%s\n" "$(basename "${list[@]}")"
 			read -p "confirm (Y)es to delete the chapters: " key
 			if [ "${key,,}" = "y" -o "${key,,}" = "yes" ]; then
 				rm "${list[@]}" && echo "succesfully deleted" && exit 0
