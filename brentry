@@ -208,10 +208,10 @@ elif [ "$site_url" = "all" -a "$rentry_mode" = "examine" ]; then
 #check for existing urls here to affect what the modes need to do here
 #if existing site, get password loaded up
 
-filepath="$(find "$sitesdir" -name "$site_url.secret")"
-if [ -f "$filepath" ]; then	
+secretfile="$(find "$sitesdir" -name "$site_url.secret")"
+if [ -f "$secretfile" ]; then	
 	if [ -z "$site_password" -o "$rentry_mode" = "edit" ]; then 
-		site_password="$(cat "$filepath")"
+		site_password="$(cat "$secretfile")"
 	fi
 fi
 
