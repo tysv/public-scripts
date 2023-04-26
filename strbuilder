@@ -157,11 +157,11 @@ case "$arg" in
 		fi
 	;;
 esac
-shift    
+shift
 done
 
 #don't make none of something
-if [ -z "$stamp" ]; then printf ''; exit 0
+if [ -z "$stamp" -o "$num" -le 0 ]; then printf ''; exit 0
 #default to just printing one copy of the stamp when unspecified
 elif [ "$num" -eq 0 ]; then num=1; repeatflag="true"; numberflag="false"; fi
 
