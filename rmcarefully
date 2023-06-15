@@ -311,9 +311,10 @@ printf "%b\n" "DEFAULT\t--remove/-r\t<file> <...> <file>"
 printf "%b\n" "\t--prune/-p\twill remove old files from (\$rmdirectory)."
 printf "%b\n" "\t\t\tcurrent def of 'old': $eraseinterval."
 printf "%b\n" "\t--undo/-u\tlaunch interactive undo-delete mode."
-printf "%b\n" "\t--dry\tdry flag set means files will not actually be affected."
-printf "%b\n" "\t--nuke\twill **perma** delete directories given."
-printf "%b\n" "\t--help\twill print this text"
+printf "%b\n" "\t--dry\t\tdry flag set means files will not actually be affected."
+printf "%b\n" "\t--nuke\t\twill **perma** delete directories given."
+printf "%b\n" "\t--help\t\twill print this text"
+printf "%b\n" "\t--storage\twill print storage usage of stored files"
 printdash
 }
 ################################################################################
@@ -321,6 +322,10 @@ printdash
 ################################################################################
 
 while [ -n "$1" ]; do
+	if [ "$1" = "--storage" ]; then
+		du -hs "$rmdirectory";	du -hs "$jaildir"
+		exit 0
+	fi
 	if [ "$1" = "--nuke" ]; then
 		groundzero="${2:-$rmdirectory}"
 		nuke "$groundzero"
@@ -339,8 +344,8 @@ while [ -n "$1" ]; do
 	fi
 	if [ "$1" = "--remove" ] || [ "$1" = "-r" ]; then
 		shift; #this can't be the way lol
-	fi	
-	if [ "$1" = "--search" ] || [ "$1" = "-s" ]; then 
+	fi
+	if [ "$1" = "--search" ] || [ "$1" = "-s" ]; then
 		tree "$rmdirectory" --prune -Pa "*${2}*"; exit 0
 	fi
 	if [ "$1" = "-h" -o "$1" = "--help" ]; then dishelp; exit 0; fi
