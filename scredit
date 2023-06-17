@@ -50,8 +50,8 @@ printHelpText () {
 addDirectory () {
 	if [ "$1" = "here" ]; then dirpath="$PWD"
 	else dirpath="$1"; fi
-	if [ -d "$dirpath" ]; then echo "$dirpath" >> "$dir_list_path"
-	else echo "Failed to find directory ($dir_path"; fi
+	if [ -d "$dirpath" ]; then echo "$(realpath "$dirpath")" >> "$dir_list_path"
+	else echo "Failed to find directory ($dir_path)"; fi
 	return 0
 }
 #fuzzyfiles is a global array containing the close matches
