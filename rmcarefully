@@ -1,9 +1,9 @@
 #!/bin/bash
 
+set -e
+
 #to be called by alias 'rm' to allow undoing rm calls
 #dependencies: realpath, basename, head, tail, find, mkdir
-
-set -e
 
 debugflag=false;dry=false;now="now" #now: change, if u want a false rm history
 rmdirectory="/$HOME/Documents/backups/.rmcarefully/"
@@ -24,7 +24,7 @@ trashdatelabel="Day | DD-MM-YY | 24:60 | seconds"
 ##############################   FUNCTIONS   ###################################
 ########## GLOBALS ONLY USED BY FUNCTIONS INITIALIZED BEFORE FUNCTION ##########
 ################################################################################
-debug () { if [ ! "$debugflag" = true ];then return 1;else printf "$1\n"; fi;}
+debug () { if [ ! "$debugflag" = true ];then return 0;else printf "$1\n"; fi;}
 ################################################################################
 removedirectories () { #RMDIRECTORIES RMDIRECTORIES RMDIRECTORIES RMDIRECTORIES
 	echo "Not implemented yet"
