@@ -148,18 +148,20 @@ success=false
 #minor flag processing
 while [ "$#" -gt 1 ]; do
 	if [ "$1" = "-n" ] || [ "$1" = "--nano" ]; then
-		editorflag="nano"; shift; fi
-	if [ "$1" = "-g" ] || [ "$1" = "--gedit" ]; then
-		editorflag="gedit"; shift; fi
-	if [ "$1" = "-m" ] || [ "$1" = "--mousepad" ]; then
-		editorflag="mousepad"; shift; fi
-	if [ "$1" = "-a" ] || [ "$1" = "--atril" ]; then
-		editorflag="atril"; shift; fi
-	if [ "$1" = "-s" ] || [ "$1" = "--shellcheck" ]; then
-		editorflag="shellcheck"; shift; fi
-	if [ "1" = "-l" ] || [ "$1" = "--less" ]; then
-		editorflag="less"; shift; fi
-	if [ "$1" = "-e" ] || [ "$1" = "--extend" ]; then
+		editorflag="nano"
+	elif [ "$1" = "-g" ] || [ "$1" = "--gedit" ]; then
+		editorflag="gedit"
+	elif [ "$1" = "-m" ] || [ "$1" = "--mousepad" ]; then
+		editorflag="mousepad"
+	elif [ "$1" = "-a" ] || [ "$1" = "--atril" ]; then
+		editorflag="atril"
+	elif [ "$1" = "-s" ] || [ "$1" = "--shellcheck" ]; then
+		editorflag="shellcheck"
+	elif [ "$1" = "-l" ] || [ "$1" = "--less" ]; then
+		editorflag="less"
+	elif [ "$1" = "-w" ] || [ "$1" = "writer" ] || [ "$1" = "libre" ]; then
+		editorflag="libreoffice-writer"
+	elif [ "$1" = "-e" ] || [ "$1" = "--extend" ]; then
 		if [ "$2" = "here" ]; then ndir="$PWD";fi
 		if [ -d "${ndir:-$2}" ]; then
 			echo "${ndir:-$2}" >> "$dir_list_path"
@@ -167,6 +169,7 @@ while [ "$#" -gt 1 ]; do
 		else echo "${ndir:-$2} is not a valid directory"; exit 0
 		fi
 	fi
+	shift
 done
 
 if [ $# -eq 0 ] && [ "$success" = "false" ]; then
@@ -214,6 +217,8 @@ elif [ "$editorflag" = "shellcheck" ]; then
 	shellcheck "$file" || echo "scredit: error: failed to shellcheck ($file)"
 elif [ "$editorflag" = "less" ]; then
 	less "$file" || echo "scredit: error: failed to less ($file)"
+elif [ "$editorflag" = "libreoffice-writer" ]; then 
+	libreoffice --writer "$file" & disown || echo "scredit: error: failed to open ($file)"
 fi
 ################################################################################
 exit 0
