@@ -1,9 +1,10 @@
 #!/bin/bash
-#TEST TESTE TESTESTSETSETESTESTESTTEESSTT
 #cd & ls combined
 #fuzzy searches working directory for matches
 #searches up the absolute path for a match -- could fuzzify this too
 #uses returns instead of exit due to source requirement
+
+(return 0 2>/dev/null) || { echo "ERROR: cs need to be sourced" && exit 0; }
 
 debugflag=false
 debug () { [ "$debugflag" = true ] && echo "$1"; }
