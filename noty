@@ -41,6 +41,17 @@ new_chapter () {
 	exit 0
 }
 
+search_notes () {
+	cd "$book_dir"
+	grep --color=auto -rn "$1" # r=recursive dir n=line num 
+	cd "$OLDPWD"
+}
+search_notes_regex () {
+	cd "$book_dir"
+	grep --color=auto -rn "$1" # r=recursive dir n=line num 
+	cd "$OLDPWD"
+}
+
 ################################################################################
 #shelf= root directory		book= chapter directory		chapter= notes in files
 ################################################################################
@@ -118,6 +129,11 @@ while [ -n "$1" ]; do
 		;;
 		--variables)
 			print_variables; exit 0
+		;;
+		--search|-s)
+			shift
+			search_notes "$@"
+			exit 0
 		;;
 	esac
 	#detecting a non default chapter specification
