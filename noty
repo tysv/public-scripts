@@ -137,8 +137,12 @@ while [ -n "$1" ]; do
 		;;
 	esac
 	#detecting a non default chapter specification
+	globmatch=("${book_dir}${1}"*)
 	if [ -f "${book_dir}${1}" ]; then
 		chapter="${book_dir}${1}"
+		shift; continue
+	elif [ "${#globmatch[@]}" -eq 1 -a -f "${globmatch[*]}" ]; then
+		chapter="${globmatch[*]}"
 		shift; continue
 	fi
 	positionals+=("$1")
