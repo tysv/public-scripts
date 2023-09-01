@@ -9,7 +9,7 @@
 exiting () { 
 	unset debugflag fullpath path relative findstart 
 	unset destination maybe potentials buildback
-	unset -f debug error teleport exiting
+	unset -f debug error teleport exiting variable_hiding_wrapper
 	trap - EXIT 
 	trap - ERR
 }
@@ -76,5 +76,9 @@ variable_hiding_wrapper () {
 	fi
 }
 variable_hiding_wrapper "$@"; set --
+
+unset debugflag fullpath path relative findstart 
+unset destination maybe potentials buildback
+unset -f debug error teleport exiting variable_hiding_wrapper
 trap - EXIT 
 trap - ERR
