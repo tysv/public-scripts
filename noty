@@ -1,4 +1,6 @@
 #!/bin/bash
+
+
 #todo interpret more complex commands
 #todo support shelves
 #todo change chapter titles
@@ -86,20 +88,20 @@ delete_chapter () {
 	fi
 	echo "No chapters were deleted"
 }
-input_helptext () {
-	printf "%s\n" '
-all one letter inputs will try working on [[current working chapter]].
+input_helptext () { clear
+	strbuilts --center '  NOTI commands  '
+	printf "%s\n" 'all one letter inputs will try working on [[current working chapter]].
 t				prints table of contents, or "index"
 h; c				prints this; clears screen
 r <chapter>			read chapter.
 e <chapter>			opens <chapter> for editing
-n; d <chapter>		creates or deletes <chapter>
+n; d <chapter>			creates or deletes <chapter>
 s <arg>				greps all notes for <arg>
 <chapter> & type >1 word, like this, to add notes to that chapter.
 '
 }
 input_interface () {
-	original_args=($*); set -- "${original_args[@]}" #hack to solve white space annoying thing
+	IFS=$' ' original_args=($*); set -- "${original_args[@]}" #hack to solve white space annoying thing
 	args=(); determine_chapter_flag=false
 	for arg in ${original_args[@]}; do
 		if [ "${#args[@]}" -le 1 ]; then 
@@ -177,6 +179,9 @@ print_variables () {
 }
 if [ ! -f "$config_file" ]; then first_time_setup; fi
 
+#if we are being sourced, we dont deal with arguments
+(return 0 2>/dev/null) && return 0
+
 while [ -n "$1" ]; do
 	case "$1" in
 		--all|-a)
@@ -211,7 +216,7 @@ while [ -n "$1" ]; do
 		--filter) input_filter "$2"; exit 0; ;;
 		--interactive|-i)
 			command="None"; clear; shift
-			input_interface "${1:-toc}"
+			input_interface "${*:-toc}"
 			while [ "$command" != "exit" ]; do
 				command="$(input_get)"; input_interface "$command"
 			done
