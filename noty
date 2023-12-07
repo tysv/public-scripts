@@ -100,6 +100,7 @@ s <arg>				greps all notes for <arg>
 <chapter> & type >1 word, like this, to add notes to that chapter.
 '
 }
+
 input_interface () {
 	IFS=$' ' original_args=($*); set -- "${original_args[@]}" #hack to solve white space annoying thing
 	args=(); determine_chapter_flag=false
@@ -122,7 +123,7 @@ input_interface () {
 			s|search|find)	search_notes "$2"; ;;
 			e|edit)			edit_chapter "$2"; ;;
 			d|delete|del)	delete_chapter "$2"; ;;
-			h|help)			input_helptext; ;;
+			h|help|\?)		input_helptext; ;;
 			q|quit|exit|x) 	exit 0; ;; 
 			clear|cls|c)	clear; ;;
 		esac
@@ -136,7 +137,7 @@ input_get () { filtered="cant"; choice="match";
 	printf "%s" "$filtered"
 }
 input_filter () {
-	allowed='A-Za-z0-9\-\_\.\ '
+	allowed='A-Za-z0-9\-\_\.\ \?'
 	#lowered="${1,,}" #lowercase
 	#we spent too much time fiddling here, caught by the cargo cult obsessive
 	#quoting of variables. we need the filter variable unquoted, obviously. duh.
@@ -223,7 +224,9 @@ while [ -n "$1" ]; do
 			exit 0
 		;;
 	esac
-	determine_chapter "$1" && { shift; continue; }
+	if [ "$default_chapter" = "$chapter" ]; then 
+		determine_chapter "$1" && { shift; continue; }
+	fi
 	positionals+=("$1")
 	shift
 done
