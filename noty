@@ -29,6 +29,8 @@ READ USAGE: noty >OR< noty <chapter>
 	-(-t)oc		prints the list of chapters
 	-(-c)hapter	create new chapter file in book_directory
 	-(-a)ll		prints all saved notes
+	-(-s)earch	search notes for a text string
+	-(-i)nteractive	enter an interactive mode. "?" to print help
 '
 }
 
