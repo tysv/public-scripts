@@ -149,6 +149,8 @@ success=false
 while [ "$#" -gt 1 ]; do
 	if [ "$1" = "-n" ] || [ "$1" = "--nano" ]; then
 		editorflag="nano"
+	elif [ "$1" = "--thonny" ]; then
+		editorflag="thonny"
 	elif [ "$1" = "-g" ] || [ "$1" = "--gedit" ]; then
 		editorflag="gedit"
 	elif [ "$1" = "-m" ] || [ "$1" = "--mousepad" ]; then
@@ -219,6 +221,8 @@ elif [ "$editorflag" = "less" ]; then
 	less "$file" || echo "scredit: error: failed to less ($file)"
 elif [ "$editorflag" = "libreoffice-writer" ]; then 
 	libreoffice --writer "$file" & disown || echo "scredit: error: failed to open ($file)"
+elif [ "$editorflag" = "thonny" ]; then
+	thonny "$file" & disown || echo "scredit: error: failed to open ($file)"
 fi
 ################################################################################
-exit 0
+exit
