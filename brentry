@@ -218,6 +218,7 @@ fi
 #if [ -z "$site_markdown" ]; then input_markdown="$*"; fi
 
 #filepath="$(find "$sitesdir" -name "$site_url.md")"
+#if [ -z $filepath ] && [ -f "$1" ]; then filepath="$1"; fi
 #if [ -f "$filepath" ]; then
 #	if [ -z "$site_markdown" ]; then site_markdown="$(cat "$filepath")"; fi
 #fi
