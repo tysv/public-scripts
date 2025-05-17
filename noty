@@ -191,7 +191,7 @@ while [ -n "$1" ]; do
 			read_all
 			exit 0
 		;;
-		--toc|--table-of-contents|-t)
+		--toc|--table-of-contents|-t|toc)
 			read_toc
 			exit 0
 		;;
@@ -240,6 +240,7 @@ words="${#word_counting_array[@]}"
 if	 [ "$#" -eq 0 ]; then
 	read_chapter; exit 0
 elif [ "$#" -eq 1 -a "$chapter" = "$default_chapter" -a "$words" -le 1 ]; then
+	search_notes "$@"; exit 0
 	read_toc; exit 0
 else
 	new_sentence "$*"; exit 0
