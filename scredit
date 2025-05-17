@@ -222,7 +222,7 @@ elif [ "$editorflag" = "less" ]; then
 elif [ "$editorflag" = "libreoffice-writer" ]; then 
 	libreoffice --writer "$file" & disown || echo "scredit: error: failed to open ($file)"
 elif [ "$editorflag" = "thonny" ]; then
-	thonny "$file" & disown || echo "scredit: error: failed to open ($file)"
+	thonny "$file" >/dev/null & disown || echo "scredit: error: failed to open ($file)"
 fi
 ################################################################################
 exit
