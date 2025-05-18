@@ -6,13 +6,6 @@
 
 (return 0 2>/dev/null) || { echo "ERROR: cs need to be sourced" && exit 0; }
 
-exiting () { 
-	set --; trap - EXIT; trap - ERR
-	unset debugflag fullpath path relative findstart 
-	unset destination maybe potentials buildback
-	unset -f debug error teleport exiting variable_hiding_wrapper
-}
-
 variable_hiding_wrapper () {
 
 	local debugflag=false
@@ -76,11 +69,8 @@ variable_hiding_wrapper () {
 }
 
 
-#trap exiting EXIT 
-#trap exiting ERR
 variable_hiding_wrapper "$@"
 unset debugflag fullpath path relative findstart 
 unset destination maybe potentials buildback
 unset -f debug error teleport exiting variable_hiding_wrapper
-#exiting
 
