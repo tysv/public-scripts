@@ -7,15 +7,14 @@
 (return 0 2>/dev/null) || { echo "ERROR: cs need to be sourced" && exit 0; }
 
 exiting () { 
+	set --; trap - EXIT; trap - ERR
 	unset debugflag fullpath path relative findstart 
 	unset destination maybe potentials buildback
 	unset -f debug error teleport exiting variable_hiding_wrapper
-	trap -- EXIT 
-	trap -- ERR
 }
-trap 'exiting' EXIT ERR
 
 variable_hiding_wrapper () {
+
 	local debugflag=false
 	debug () { [ "$debugflag" = true ] && echo "$1"; }
 	error () { printf "error: %s\n" "$1"; return "${2:-1}"; }
@@ -75,10 +74,13 @@ variable_hiding_wrapper () {
 		fi
 	fi
 }
-variable_hiding_wrapper "$@"; set --
 
+
+#trap exiting EXIT 
+#trap exiting ERR
+variable_hiding_wrapper "$@"
 unset debugflag fullpath path relative findstart 
 unset destination maybe potentials buildback
 unset -f debug error teleport exiting variable_hiding_wrapper
-trap -- EXIT 
-trap -- ERR
+#exiting
+
